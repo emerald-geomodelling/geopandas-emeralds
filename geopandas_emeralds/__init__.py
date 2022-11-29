@@ -1,5 +1,6 @@
 import cython_bbox
 import pandas as pd
+import numpy as np
 import scipy.sparse
 
 def bounds_distance_matrix(a, b, max_distance, output_type="dok_matrix"):
@@ -41,3 +42,15 @@ def bounds_distance_matrix(a, b, max_distance, output_type="dok_matrix"):
         return dict(zip(mres.keys(), mres.values()))
     
     return mres
+
+
+def bounds_nearest_neighbour_query(a, b, max_distance):
+    distancem = bounds_distance_matrix(a, b, max_distance)
+    distancemlil = distancem.tolil()
+
+    return pd.DataFrame(
+        [(i[m], d[m])
+         for m, i, d in
+         [((np.argmin(d) if d else -1), i, d)
+          for i, d in zip(distancemlil.rows, distancemlil.data)]],
+        columns=["idx", "distance"])
